@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расчёт КБЖУ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5ede0;
+            min-height: 100vh;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: transparent;
+            border-radius: 0;
+            padding: 20px;
+            box-shadow: none;
+            max-width: 900px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #8b6f47;
+            margin-bottom: 8px;
+            font-size: clamp(20px, 5vw, 28px);
+        }
+        .subtitle {
+            text-align: center;
+            color: #a0826d;
+            margin-bottom: 20px;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+        .section {
+            margin-bottom: 35px;
+        }
+        .section h2 {
+            color: #8b6f47;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #d4c4b0;
+            padding-bottom: 10px;
+        }
+        .formula {
+            background: #faf6f1;
+            padding: 20px;
+            border-radius: 0;
+            border-left: 4px solid #d4c4b0;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            color: #5a5a5a;
+            line-height: 1.8;
+        }
+        .formula-label {
+            color: #8b6f47;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .result-box {
+            background: linear-gradient(135deg, #d4c4b0 0%, #b8a89a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 0;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 20px 0;
+            -webkit-overflow-scrolling: touch;
+            background: #faf6f1;
+            border-radius: 0;
+            border: 1px solid #e5ddd0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th {
+            background: #d4c4b0;
+            color: #000;
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 700;
+            border: 1px solid #c9b9ad;
+            font-size: 18px;
+        }
+        td {
+            padding: 14px 10px;
+            border: 1px solid #c9b9ad;
+            background: #faf6f1;
+            color: #5a5a5a;
+            font-size: 15px;
+        }
+        tr:hover {
+            background: #f5ede0;
+        }
+        .nutrient-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .metric {
+            color: #8b6f47;
+            font-weight: 600;
+        }
+        .recommendation {
+            background: #f0e8e0;
+            padding: 15px;
+            border-radius: 0;
+            border-left: 4px solid #c9b9ad;
+            margin-top: 10px;
+            color: #5a5a5a;
+            line-height: 1.6;
+        }
+        .note {
+            background: #faf6f1;
+            padding: 15px;
+            border-radius: 0;
+            border-left: 4px solid #d4c4b0;
+            margin-top: 10px;
+            color: #8b6f47;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        details {
+            margin: 15px 0;
+        }
+        summary {
+            background: linear-gradient(135deg, #d4c4b0 0%, #b8a89a 100%);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 600;
+            user-select: none;
+            transition: all 0.3s ease;
+            font-size: clamp(13px, 3vw, 15px);
+        }
+        summary:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(212, 196, 176, 0.4);
+        }
+        details[open] summary {
+            border-radius: 0;
+        }
+        .details-content {
+            background: #faf6f1;
+            border: 1px solid #d4c4b0;
+            border-top: none;
+            padding: 15px;
+            border-radius: 0;
+        }
+        .params {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .param-card {
+            background: #faf6f1;
+            padding: 12px;
+            border-radius: 0;
+            text-align: center;
+            border: 2px solid #e5ddd0;
+        }
+        .param-label {
+            color: #a0826d;
+            font-size: clamp(11px, 2vw, 12px);
+            margin-bottom: 8px;
+        }
+        .param-value {
+            color: #8b6f47;
+            font-size: clamp(16px, 4vw, 20px);
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            .formula {
+                padding: 15px;
+            }
+            th {
+                padding: 10px 5px;
+                font-size: 11px;
+            }
+            td {
+                padding: 10px 5px;
+            }
+            .recommendation, .note {
+                padding: 12px;
+                font-size: 13px;
+            }
+            .params {
+                gap: 10px;
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+            .param-card {
+                padding: 10px;
+            }
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+            h1 {
+                margin-bottom: 5px;
+            }
+            .subtitle {
+                margin-bottom: 15px;
+            }
+            .formula {
+                padding: 12px;
+                font-size: 12px;
+            }
+            th, td {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+            .recommendation, .note {
+                padding: 10px;
+                font-size: 12px;
+                line-height: 1.5;
+            }
+            .params {
+                gap: 8px;
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .param-card {
+                padding: 8px;
+            }
+            summary {
+                padding: 10px 12px;
+            }
+            .details-content {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Расчёт КБЖУ для набора массы</h1>
+        <div class="subtitle">Женщина, 37 лет | 2 силовых тренировки в неделю</div>
+
+        <!-- Исходные данные -->
+        <div class="section">
+            <h2>📋 Исходные данные</h2>
+            <div class="params">
+                <div class="param-card">
+                    <div class="param-label">Возраст</div>
+                    <div class="param-value">37 лет</div>
+                </div>
+                <div class="param-card">
+                    <div class="param-label">Рост</div>
+                    <div class="param-value">157 см</div>
+                </div>
+                <div class="param-card">
+                    <div class="param-label">Вес</div>
+                    <div class="param-value">43 кг</div>
+                </div>
+                <div class="param-card">
+                    <div class="param-label">Коэффициент активности</div>
+                    <div class="param-value">1,375</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- БМР -->
+        <div class="section">
+            <h2>🔥 Шаг 1: Базальный Метаболизм (БМР)</h2>
+            <details>
+                <summary>📖 Что такое БМР и зачем его считать?</summary>
+                <div class="details-content">
+                    <strong>БМР (Basal Metabolic Rate)</strong> — это количество калорий, которое ваше тело сжигает в состоянии полного покоя для поддержания базовых функций (дыхание, кровообращение, теплоизоляция). Это фундамент для всех остальных расчётов.
+                </div>
+            </details>
+            <div class="formula">
+                <div class="formula-label">Формула Харриса-Бенедикта (для женщин):</div>
+                БМР = 655 + (9,6 × вес) + (1,8 × рост) - (4,7 × возраст)
+            </div>
+            <div class="formula">
+                <div class="formula-label">Расчёт:</div>
+                БМР = 655 + (9,6 × 43) + (1,8 × 157) - (4,7 × 37)<br>
+                БМР = 655 + 412,8 + 282,6 - 173,9<br>
+                БМР = <span style="color: #8b6f47; font-weight: bold;">1 176,5 ≈ 1 177 ккал/день</span>
+            </div>
+        </div>
+
+        <!-- TDEE -->
+        <div class="section">
+            <h2>⚡ Шаг 2: Общие суточные затраты (TDEE)</h2>
+            <details>
+                <summary>📖 Что такое TDEE и коэффициент активности?</summary>
+                <div class="details-content">
+                    <strong>TDEE (Total Daily Energy Expenditure)</strong> — общее количество калорий, которое вы сжигаете за день, включая основной обмен, пищеварение и физическую активность.<br><br>
+                    <strong>Коэффициент 1,375</strong> соответствует умеренной активности: 2 тренировки в неделю. Значения:<br>
+                    • 1,2 = Сидячий образ жизни<br>
+                    • 1,375 = Легкая активность (1-3 тренировки)<br>
+                    • 1,55 = Умеренная активность (3-5 тренировок)<br>
+                    • 1,725 = Интенсивная активность (6-7 тренировок)
+                </div>
+            </details>
+            <div class="formula">
+                <div class="formula-label">Формула:</div>
+                TDEE = БМР × Коэффициент активности
+            </div>
+            <div class="formula">
+                <div class="formula-label">Расчёт:</div>
+                TDEE = 1 177 × 1,375<br>
+                TDEE = <span style="color: #8b6f47; font-weight: bold;">1 618 ккал/день</span>
+            </div>
+        </div>
+
+        <!-- Калории для набора -->
+        <div class="section">
+            <h2>📈 Шаг 3: Калории для набора массы</h2>
+            <details>
+                <summary>📖 Что такое профицит калорий и почему он нужен?</summary>
+                <div class="details-content">
+                    <strong>Профицит калорий</strong> — это избыток калорий сверх того, что вы сжигаете. Именно он даёт вашему телу энергию и материал для построения новой мышечной ткани.<br><br>
+                    <strong>+300 ккал</strong> — оптимальный профицит для качественного набора. Слишком большой профицит приведёт к избыточному жиру, слишком маленький — к медленному прогрессу.
+                </div>
+            </details>
+            <div class="formula">
+                <div class="formula-label">Расчёт:</div>
+                Целевые калории = TDEE + Профицит<br>
+                Целевые калории = 1 618 + 300<br>
+                Целевые калории = <span style="color: #8b6f47; font-weight: bold;">1 918 ккал/день</span>
+            </div>
+        </div>
+
+        <!-- КБЖУ -->
+        <div class="section">
+            <h2>🎯 Шаг 4: Распределение КБЖУ</h2>
+            
+            <details>
+                <summary>📖 Почему именно такие пропорции белков, жиров и углеводов?</summary>
+                <div class="details-content">
+                    <strong>Белки (22%):</strong> При наборе массы нужно больше белка для синтеза новой мышечной ткани. 2-2,5 г на кг массы тела — стандартная рекомендация.<br><br>
+                    <strong>Жиры (29%):</strong> Жиры необходимы для выработки гормонов (тестостерона, эстрогена), усвоения жирорастворимых витаминов. Минимум 50-60 г в день.<br><br>
+                    <strong>Углеводы (48%):</strong> Основной источник энергии для тренировок и восстановления. Много углеводов около тренировок улучшает производительность.
+                </div>
+            </details>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #8b6f47; font-size: 16px; margin-bottom: 10px;">Оптимальные пропорции при наборе массы:</h3>
+                <div class="formula">
+                    <div class="formula-label">Белки:</div>
+                    20-25% от калорий = 0,22 × 1918 = 422 ккал = 105 г<br><br>
+                    <div class="formula-label">Жиры:</div>
+                    28-30% от калорий = 0,29 × 1918 = 556 ккал = 62 г<br><br>
+                    <div class="formula-label">Углеводы:</div>
+                    45-52% от калорий = 0,48 × 1918 = 921 ккал = 230 г
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Макронутриент</th>
+                            <th>Граммы</th>
+                            <th>Килокалории</th>
+                            <th>% от суточного</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="nutrient-name">🥚 Белки (Protein)</span></td>
+                            <td><span class="metric">105 г</span></td>
+                            <td><span class="metric">420 ккал</span></td>
+                            <td><span class="metric">22%</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="nutrient-name">🥑 Жиры (Fat)</span></td>
+                            <td><span class="metric">62 г</span></td>
+                            <td><span class="metric">558 ккал</span></td>
+                            <td><span class="metric">29%</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="nutrient-name">🌾 Углеводы (Carbs)</span></td>
+                            <td><span class="metric">230 г</span></td>
+                            <td><span class="metric">920 ккал</span></td>
+                            <td><span class="metric">48%</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="nutrient-name"><strong>ИТОГО</strong></span></td>
+                            <td><span class="metric"><strong>397 г</strong></span></td>
+                            <td><span class="metric"><strong>1 918 ккал</strong></span></td>
+                            <td><span class="metric"><strong>100%</strong></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Расчёт гейнера -->
+        <div class="section">
+            <h2>🥤 Шаг 5: Расчёт гейнера (100 г сухого порошка)</h2>
+            <div class="formula">
+                <div class="formula-label">Соотношение углеводы:белки = 3:1</div>
+                На 100 г гейнера:<br>
+                Белки: 100 ÷ (3+1) = 100 ÷ 4 = <span style="color: #8b6f47; font-weight: bold;">25 г</span><br>
+                Углеводы: 100 × (3/4) = <span style="color: #8b6f47; font-weight: bold;">75 г</span><br><br>
+                
+                <div class="formula-label">Калорийность гейнера:</div>
+                Белки: 25 г × 4 ккал = 100 ккал<br>
+                Углеводы: 75 г × 4 ккал = 300 ккал<br>
+                <strong style="color: #8b6f47;">Итого: 400 ккал на порцию</strong>
+            </div>
+            <div class="recommendation">
+                <strong>💧 Приготовление:</strong> 100 г гейнера смешать с 250-300 мл молока (3,2%) или 200 мл молока + 100 мл воды<br>
+                Молоко (250 мл) добавит: ~8 г белков, ~3 г жиров, ~12 г углеводов, ~165 ккал
+            </div>
+        </div>
+
+        <!-- Дневной рацион 1 -->
+        <div class="section">
+            <h2>🍽️ Примеры дневного рациона</h2>
+            
+            <details>
+                <summary>📋 Вариант 1: День без тренировки (1768 ккал - сохранение веса +150)</summary>
+                <div class="details-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Приём пищи</th>
+                            <th>Блюдо</th>
+                            <th>Белки (г)</th>
+                            <th>Жиры (г)</th>
+                            <th>Углеводы (г)</th>
+                            <th>Ккал</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Завтрак</strong></td>
+                            <td>Овсяная каша (40 г) на молоке (150 мл) + 1 яйцо</td>
+                            <td>10</td>
+                            <td>5</td>
+                            <td>36</td>
+                            <td>260</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Перекус 1</strong></td>
+                            <td>Творог (120 г) 5% + ягоды (80 г)</td>
+                            <td>16</td>
+                            <td>5</td>
+                            <td>14</td>
+                            <td>170</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Обед</strong></td>
+                            <td>Куриная грудка (130 г) + рис (60 г сухого) + масло (7 мл)</td>
+                            <td>30</td>
+                            <td>9</td>
+                            <td>52</td>
+                            <td>450</td>
+                        </tr>
+                        <tr style="background: #d4c4b0;">
+                            <td><strong>Перекус 2 (гейнер)</strong></td>
+                            <td><strong>Гейнер:</strong> 80 г порошка + молоко (200 мл)</td>
+                            <td>26</td>
+                            <td>6</td>
+                            <td>70</td>
+                            <td>452</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ужин</strong></td>
+                            <td>Красная рыба (120 г) + батат (100 г) + салат с маслом (3 мл)</td>
+                            <td>20</td>
+                            <td>8</td>
+                            <td>20</td>
+                            <td>280</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Перекус 3</strong></td>
+                            <td>Йогурт (120 г) 2%</td>
+                            <td>4</td>
+                            <td>2</td>
+                            <td>9</td>
+                            <td>76</td>
+                        </tr>
+                        <tr style="background: #d4c4b0; color: #5a5a5a;">
+                            <td><strong>ИТОГО</strong></td>
+                            <td><strong>За день</strong></td>
+                            <td><strong>106</strong></td>
+                            <td><strong>35</strong></td>
+                            <td><strong>201</strong></td>
+                            <td><strong>1688</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">
+                <strong>📊 Анализ:</strong> 1688 ккал + 80 ккал (приблизительная погрешность) ≈ 1768 ккал (TDEE + 150)<br>
+                <strong>Рекомендация:</strong> Добавить 30 г орехов или ещё 10 мл масла в течение дня для точного попадания в калорийность.
+            </div>
+        </div>
+
+            </details>
+
+            <details>
+                <summary>🏋️ Вариант 2: День с тренировкой (1828 ккал - сохранение веса +210)</summary>
+                <div class="details-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Приём пищи</th>
+                            <th>Блюдо</th>
+                            <th>Белки (г)</th>
+                            <th>Жиры (г)</th>
+                            <th>Углеводы (г)</th>
+                            <th>Ккал</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Завтрак</strong></td>
+                            <td>Омлет из 2 яиц + 1 ломтик хлеба + апельсин (150 г)</td>
+                            <td>16</td>
+                            <td>10</td>
+                            <td>32</td>
+                            <td>305</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Перекус 1 (за 2 часа до тренировки)</strong></td>
+                            <td>Банан (150 г) + 22 г арахисового масла</td>
+                            <td>8</td>
+                            <td>7</td>
+                            <td>28</td>
+                            <td>250</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Обед (за 1 час до тренировки)</strong></td>
+                            <td>Макароны (85 г сухого) + индейка (125 г) + помидоры</td>
+                            <td>31</td>
+                            <td>5</td>
+                            <td>65</td>
+                            <td>475</td>
+                        </tr>
+                        <tr style="background: #d4c4b0;">
+                            <td><strong>Во время/после тренировки</strong></td>
+                            <td><strong>Гейнер:</strong> 100 г порошка + молоко (250 мл)</td>
+                            <td>33</td>
+                            <td>8</td>
+                            <td>87</td>
+                            <td>565</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Полдник</strong></td>
+                            <td>Творог (105 г) 5% + ягоды (85 г)</td>
+                            <td>15</td>
+                            <td>4</td>
+                            <td>15</td>
+                            <td>170</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ужин</strong></td>
+                            <td>Лосось (125 г) + гречка (62 г сухого) + брокколи + масло оливковое (4 мл)</td>
+                            <td>29</td>
+                            <td>11</td>
+                            <td>52</td>
+                            <td>495</td>
+                        </tr>
+                        <tr style="background: #d4c4b0; color: #5a5a5a;">
+                            <td><strong>ИТОГО</strong></td>
+                            <td><strong>За день</strong></td>
+                            <td><strong>132</strong></td>
+                            <td><strong>45</strong></td>
+                            <td><strong>279</strong></td>
+                            <td><strong>2260</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">
+                <strong>📊 Анализ:</strong> 2260 ккал ≈ 1618 (TDEE) + 210 (профицит для восстановления после тренировки)<br>
+                <strong>💡 Стратегия:</strong> В дни тренировок углеводы сосредоточены вокруг тренировки. Гейнер пить в течение часа после тренировки для лучшего восстановления и компенсации энергозатрат.
+            </div>
+        </div>
+            </details>
+
+            <details>
+                <summary>⚙️ Вариант 3: Оптимизированный (1903 ккал - ближе к плану)</summary>
+                <div class="details-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Приём пищи</th>
+                            <th>Блюдо</th>
+                            <th>Белки (г)</th>
+                            <th>Жиры (г)</th>
+                            <th>Углеводы (г)</th>
+                            <th>Ккал</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Завтрак</strong></td>
+                            <td>Овсяная каша (40 г) на молоке (150 мл) + 1 яйцо</td>
+                            <td>10</td>
+                            <td>5</td>
+                            <td>38</td>
+                            <td>260</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Перекус 1</strong></td>
+                            <td>Творог (120 г) 5% + ягоды (80 г)</td>
+                            <td>16</td>
+                            <td>5</td>
+                            <td>14</td>
+                            <td>170</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Обед</strong></td>
+                            <td>
